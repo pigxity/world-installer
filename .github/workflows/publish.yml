@@ -1,0 +1,40 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout release
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Publish to Modrinth
+        uses: Kira-NT/mc-publish@v3
+        with:
+          modrinth-id: gTCTESDs
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+
+          files: build/libs/!(*-@(dev|sources|javadoc)).jar
+
+          loaders: fabric
+
+          game-versions: |
+            1.21.1

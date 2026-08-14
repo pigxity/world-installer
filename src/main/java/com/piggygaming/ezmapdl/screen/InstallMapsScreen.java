@@ -15,28 +15,34 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.piggygaming.ezmapdl.file.FileUtils.*;
 
 @Environment(EnvType.CLIENT)
 public class InstallMapsScreen extends Screen {
 
+    private static final int LIST_WIDTH = 250;
+    private static final int LIST_HEIGHT = 120;
+    private static final int LIST_ROW_HEIGHT = 20;
+    private static final int ELEMENT_PADDING = 20;
+
     private final Screen parent;
     private final MinecraftClient client;
     private final File savesDirectory;
+    private final File downloadsDirectory;
 
     private FileList fileList;
+    private ButtonWidget continueButton;
     private CompletableFuture<List<File>> filesFuture;
 
     public InstallMapsScreen(Screen parent) throws IOException {
         super(Text.literal("Select a zip file:"));
         this.parent = parent;
         this.client = MinecraftClient.getInstance();
+
         this.savesDirectory = new File(this.client.runDirectory.getPath() + File.separator + "saves");
+        this.downloadsDirectory = new File(System.getProperty("user.home") + File.separator + "Downloads");
     }
 
     private void errorScreen(String errorMessage) {
@@ -48,58 +54,67 @@ public class InstallMapsScreen extends Screen {
         this.client.setScreen(new ErrorScreen(Arrays.toString(exception.getStackTrace()), this.parent));
     }
 
-    private FileList fileListFromFiles(List<File> files) {
-        FileList fileList = new FileList(client, 200, 300, this.height / 2, this.width / 2);
+    private int getListTop() {
+        return (this.height - LIST_HEIGHT) / 2;
+    }
+    private int getListBottom() {
+        return getListTop() + LIST_HEIGHT;
+    }
 
-        for (File file : files) {
-            fileList.add(file);
-        }
-
-        fileList.selectFirst();
-        return fileList;
+    private FileList createFileList() {
+        FileList list = new FileList(
+                client,
+                LIST_WIDTH,
+                LIST_HEIGHT,
+                getListTop(),
+                LIST_ROW_HEIGHT
+        );
+        list.setX(this.width / 2 - LIST_WIDTH / 2);
+        return list;
     }
 
     private void onConfirm() {
-        assert fileList.getSelectedOrNull() != null;
-        File selectedFile = fileList.getSelectedOrNull().getFile();
+        FileList.Entry selected = fileList.getSelectedOrNull();
+        if (selected == null) {
+            return;
+        }
+        File selectedFile = selected.getFile();
 
-        File newFile = new File(savesDirectory.getPath() + File.separator + selectedFile.getName());
         this.client.setScreen(new LoadingScreen(this.parent));
 
-        if (selectedFile.renameTo(newFile)) {
-            try {
-                //nested world directory, extract directly into saves
-                if (fileNotInRootDir(newFile, "level.dat")) {
-                    UnzipThread thread = new UnzipThread(newFile.getPath(), savesDirectory, this.client);
-                    thread.start();
-
-                //top-level level.dat
-                } else {
-                    File dir = new File(savesDirectory.getPath() + File.separator + newFile.getName().replaceFirst("[.][^.]+$", ""));
-                    dir.mkdirs();
-
-                    UnzipThread thread = new UnzipThread(newFile.getPath(), dir, this.client);
-                    thread.start();
+        try {
+            // nested world directory, extract directly into saves
+            if (fileNotInRootDir(selectedFile, "level.dat")) {
+                new UnzipThread(selectedFile.getPath(), savesDirectory, this.client).start();
+            } else {
+                // top-level level.dat
+                File dir = new File(savesDirectory, selectedFile.getName().replaceFirst("[.][^.]+$", ""));
+                if (!dir.isDirectory() && !dir.mkdirs()) {
+                    throw new IOException("Failed to create directory " + dir);
                 }
-            } catch (Exception e) {
-                errorScreen(e);
+                new UnzipThread(selectedFile.getPath(), dir, this.client).start();
             }
+        } catch (Exception e) {
+            errorScreen(e);
         }
     }
 
     @Override
     protected void init() {
         filesFuture = CompletableFuture.supplyAsync(()
-                -> getWorldFiles(System.getProperty("user.home") + File.separator + "Downloads"));
+                -> getWorldFiles(downloadsDirectory));
 
-        fileList = new FileList(client, 200, 300, this.height / 2, this.width / 2);
+        fileList = createFileList();
         this.addDrawableChild(fileList);
 
-        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CONTINUE, (b) -> onConfirm())
-                .dimensions(this.width / 2 - 105, this.height /2 + 40, 100, 20).build());
+        final int buttonY = getListBottom() + ELEMENT_PADDING;
+
+        continueButton = this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CONTINUE, (b) -> onConfirm())
+                .dimensions(this.width / 2 - 105, buttonY, 100, 20).build());
+        continueButton.active = false;
 
         this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CANCEL, (b) -> this.client.setScreen(this.parent))
-                .dimensions(this.width / 2 + 5, this.height /2 + 40, 100, 20).build());
+                .dimensions(this.width / 2 + 5, buttonY, 100, 20).build());
     }
 
     @Override
@@ -110,7 +125,9 @@ public class InstallMapsScreen extends Screen {
             List<File> files = filesFuture.join();
 
             if (files.isEmpty()) {
-                errorScreen("Cannot find a valid zip file");
+                errorScreen("Cannot find a valid zip file in " + downloadsDirectory.getAbsolutePath());
+                filesFuture = null;
+                return;
             }
 
             for (File file : files) {
@@ -118,6 +135,7 @@ public class InstallMapsScreen extends Screen {
             }
 
             fileList.selectFirst();
+            continueButton.active = true;
 
             filesFuture = null;
         }
@@ -127,7 +145,13 @@ public class InstallMapsScreen extends Screen {
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         super.renderBackground(context, mouseX, mouseY, delta);
         super.render(context, mouseX, mouseY, delta);
-        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2 - 100, 16777215);
+        context.drawCenteredTextWithShadow(
+                this.textRenderer,
+                this.title,
+                this.width / 2,
+                getListTop() - ELEMENT_PADDING - this.textRenderer.fontHeight,
+                16777215
+        );
     }
 
 }

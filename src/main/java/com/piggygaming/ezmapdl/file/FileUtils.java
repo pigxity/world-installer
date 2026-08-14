@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -70,8 +71,7 @@ public final class FileUtils {
         zis.close();
     }
 
-    public static List<File> getWorldFiles(String directoryFilePath) {
-        File directory = new File(directoryFilePath);
+    public static List<File> getWorldFiles(File directory) {
         File[] files = directory.listFiles(File::isFile);
 
         if (files == null || files.length == 0) return List.of();
@@ -79,6 +79,7 @@ public final class FileUtils {
         return Arrays.stream(files)
                 .filter(file -> getFileExtension(file).equals(".zip"))
                 .filter(file -> zipfileContains(file, "level.dat"))
+                .sorted(Comparator.comparingLong(File::lastModified).reversed()) //sort by modification date
                 .toList();
     }
 

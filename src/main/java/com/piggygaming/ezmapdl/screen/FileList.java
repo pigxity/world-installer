@@ -8,8 +8,8 @@ import net.minecraft.text.Text;
 import java.io.File;
 
 public class FileList extends AlwaysSelectedEntryListWidget<FileList.Entry> {
-    public FileList(MinecraftClient client, int width, int height, int y, int x) {
-        super(client, width, height, y, x);
+    public FileList(MinecraftClient client, int width, int height, int top, int itemHeight) {
+        super(client, width, height, top, itemHeight);
     }
 
     public void add(File file) {
@@ -17,7 +17,9 @@ public class FileList extends AlwaysSelectedEntryListWidget<FileList.Entry> {
     }
 
     public void selectFirst() {
-        this.setSelected(this.children().getFirst());
+        if (!this.children().isEmpty()) {
+            this.setSelected(this.children().getFirst());
+        }
     }
 
     public class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
