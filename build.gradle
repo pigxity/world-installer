@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.7-SNAPSHOT'
+	id 'fabric-loom' version '1.17-SNAPSHOT'
 	id 'maven-publish'
     id 'com.modrinth.minotaur' version '2.9.0'
 }
@@ -20,9 +20,6 @@ dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 }
 
 processResources {
@@ -71,6 +68,24 @@ publishing {
 	}
 }
 
+static List<String> expandVersions(String range) {
+    def parts = range.split("-")
+
+    if (parts.length == 1) {
+        return [range] as String[]
+    }
+
+    def startVersion = parts[0]
+    int end = parts[1].toInteger()
+
+    def versionParts = startVersion.split("\\.")
+    int start = versionParts.last().toInteger()
+    def prefix = versionParts[0..-2].join(".")
+
+    return (start..end)
+            .collect { "${prefix}.${it}".toString() }
+}
+
 modrinth {
     token = System.getenv("MODRINTH_TOKEN")
 
@@ -82,6 +97,6 @@ modrinth {
 
     uploadFile = remapJar
 
-    gameVersions = [project.minecraft_version]
+    gameVersions = expandVersions(project.modrinth_version)
     loaders = ["fabric"]
 }
