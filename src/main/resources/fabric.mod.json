@@ -5,7 +5,7 @@
 	"name": "World Download Button",
 	"description": "Adds a button to the select world screen to instantly install minecraft worlds",
 	"authors": [
-		"Piggy Gaming"
+		"pigxity"
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/easymapdownload",
@@ -13,7 +13,7 @@
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/ezmapdl/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
 		"main": [
 			"com.piggygaming.ezmapdl.EasyMapDownload"

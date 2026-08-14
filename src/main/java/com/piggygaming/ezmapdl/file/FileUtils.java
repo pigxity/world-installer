@@ -1,16 +1,20 @@
-package com.piggygaming.ezmapdl;
+package com.piggygaming.ezmapdl.file;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
-public class FileUtils {
+public final class FileUtils {
 
     private static String getFileExtension(File file) {
         String name = file.getName();
@@ -66,43 +70,29 @@ public class FileUtils {
         zis.close();
     }
 
-    public static File getLastModified(String directoryFilePath) throws IOException {
+    public static List<File> getWorldFiles(String directoryFilePath) {
         File directory = new File(directoryFilePath);
         File[] files = directory.listFiles(File::isFile);
-        long lastModifiedTime = Long.MIN_VALUE;
-        File chosenFile = null;
 
-        if (files != null)
-        {
-            for (File file : files)
-            {
-                if (file.lastModified() > lastModifiedTime)
-                {
-                    if (getFileExtension(file).equals(".zip")) {
-                        if (zipfileContains(file, "level.dat")) {
-                            chosenFile = file;
-                            lastModifiedTime = file.lastModified();
-                        }
-                    }
-                }
-            }
-        }
-        if (chosenFile != null && chosenFile.exists()) {
-            return chosenFile;
-        } else {
-            return null;
-        }
+        if (files == null || files.length == 0) return List.of();
+
+        return Arrays.stream(files)
+                .filter(file -> getFileExtension(file).equals(".zip"))
+                .filter(file -> zipfileContains(file, "level.dat"))
+                .toList();
     }
 
     public static boolean fileNotInRootDir(File zip, String targetFile) {
         return zipfileContains(zip, "/" + targetFile);
     }
 
-    public static List<String> listContents(File file){
-        ZipFile zipFile = null;
+    public static List<String> listContents(File file) {
         try {
-            zipFile = new ZipFile(file);
-            List<String> fileContent = zipFile.stream().map(ZipEntry::getName).collect(Collectors.toList());
+            ZipFile zipFile = new ZipFile(file);
+            List<String> fileContent = zipFile.stream()
+                    .map(ZipEntry::getName)
+                    .collect(Collectors.toList());
+
             zipFile.close();
             return fileContent;
         }
@@ -112,14 +102,10 @@ public class FileUtils {
         return null;
     }
 
-    public static boolean zipfileContains(File zipfile, String targetFile) {
-        List<String> list = listContents(zipfile);
-        for (String file : list) {
-            if (file.contains(targetFile)) {
-                return true;
-            }
-        }
-        return false;
+    public static boolean zipfileContains(@NotNull File zipfile, String targetFile) {
+        return Objects.requireNonNull(listContents(zipfile))
+                .stream()
+                .anyMatch(file -> file.contains(targetFile));
     }
 
 }

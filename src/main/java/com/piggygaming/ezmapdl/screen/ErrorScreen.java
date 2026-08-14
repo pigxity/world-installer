@@ -1,4 +1,4 @@
-package com.piggygaming.ezmapdl;
+package com.piggygaming.ezmapdl.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
@@ -7,20 +7,22 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.screen.ScreenTexts;
 import net.minecraft.text.Text;
 
-public class LoadingScreen extends Screen {
+public class ErrorScreen extends Screen {
 
     protected final Screen parent;
     public MinecraftClient client;
 
-    protected LoadingScreen(Screen parent) {
-        super(Text.literal("Installing map..."));
+    protected ErrorScreen(String title, Screen parent) {
+        super(Text.literal("ERROR: " + title));
         this.parent = parent;
         this.client = MinecraftClient.getInstance();
     }
 
     @Override
     protected void init() {
-
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.BACK, (button) -> {
+            this.client.setScreen(this.parent);
+        }).dimensions(this.width / 2 - 50, this.height /2 + 40, 100, 20).build());
     }
 
     @Override
