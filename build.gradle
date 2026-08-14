@@ -1,6 +1,7 @@
 plugins {
 	id 'fabric-loom' version '1.7-SNAPSHOT'
 	id 'maven-publish'
+    id 'com.modrinth.minotaur' version '2.9.0'
 }
 
 version = project.mod_version
@@ -68,4 +69,19 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+
+modrinth {
+    token = System.getenv("MODRINTH_TOKEN")
+
+    projectId = project.modrinth_id
+
+    versionNumber = project.version
+    versionName = "World Download Button ${project.version}"
+    versionType = "release"
+
+    uploadFile = remapJar
+
+    gameVersions = [project.minecraft_version]
+    loaders = ["fabric"]
 }
