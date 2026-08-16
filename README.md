@@ -1,11 +1,20 @@
-# World Download Button
-Tired of installing Minecraft worlds manually? This Fabric mod adds a button to the select world screen that allows you to instantly install Minecraft worlds directly from your downloads folder.
+# World Install Button
+Download on [Modrinth](https://modrinth.com/mod/worldinstaller)
 
-Download on [Modrinth](https://modrinth.com/mod/easymapdownload)
+A client-side Fabric mod that adds a button to the Select World screen to instantly extract and install worlds from your downloads folder. 
 
-### Cannot find a valid zip file?
-Make sure you have a valid zip file of a Minecraft world (containing a level.dat file) in your user's Downloads directory (**C:\Users\{user}\Downloads**, or **~/Downloads** on Linux)
+It scans your Downloads directory for valid zip files of Minecraft worlds (that contain a level.dat file) and allows you to select which one to install.
 
-If the level.dat file isn't directly inside the root of the archive, it will automatically extract it recursively!
+Also lets you export a world in one click from the Edit World screen, outputing a zip directly to your downloads folder.
 
-![Gif of the mod being used to install a world](https://i.gyazo.com/c6b6950d3dbe656e442bb01d639c7d97.gif)
+## Config
+
+The directory path is configurable. Edit `config/worldinstaller.json`. 
+
+`~` here represents the user home and works on both Windows and Linux.
+
+Default config:
+```json
+"installDirectory": "~/Downloads",
+"exportDirectory": "~/Downloads"
+``` 

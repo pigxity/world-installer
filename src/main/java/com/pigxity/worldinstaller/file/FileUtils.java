@@ -6,17 +6,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 public final class FileUtils {
-
     private static String getFileExtension(File file) {
         String name = file.getName();
         int lastIndexOf = name.lastIndexOf(".");
@@ -39,12 +43,40 @@ public final class FileUtils {
         return destFile;
     }
 
+    public static void zipDirectory(Path sourceDirectory, Path zipFile) throws IOException {
+        Files.createDirectories(zipFile.getParent());
+
+        try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(zipFile)); Stream<Path> paths = Files.walk(sourceDirectory)) {
+            Iterator<Path> iterator = paths.iterator();
+            while (iterator.hasNext()) {
+                Path path = iterator.next();
+                Path relativePath = sourceDirectory.relativize(path);
+                if (relativePath.toString().isEmpty()) {
+                    continue;
+                }
+
+                String entryName = relativePath.toString().replace(File.separatorChar, '/');
+                if (Files.isDirectory(path)) {
+                    entryName += "/";
+                }
+
+                output.putNextEntry(new ZipEntry(entryName));
+                if (Files.isRegularFile(path)) {
+                    Files.copy(path, output);
+                }
+                output.closeEntry();
+            }
+        }
+    }
+
     public static void unzipFile(String fileZip, File destDir) throws IOException {
         byte[] buffer = new byte[1024];
         ZipInputStream zis = new ZipInputStream(new FileInputStream(fileZip));
         ZipEntry zipEntry = zis.getNextEntry();
+
         while (zipEntry != null) {
             File newFile = newFile(destDir, zipEntry);
+
             if (zipEntry.isDirectory()) {
                 if (!newFile.isDirectory() && !newFile.mkdirs()) {
                     throw new IOException("Failed to create directory " + newFile);

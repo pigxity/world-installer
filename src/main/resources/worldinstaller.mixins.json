@@ -3,6 +3,7 @@
 	"package": "com.pigxity.worldinstaller.mixin",
 	"compatibilityLevel": "JAVA_17",
 	"mixins": [
+      "EditWorldScreenMixin",
       "SelectWorldScreenMixin"
 	],
 	"injectors": {
