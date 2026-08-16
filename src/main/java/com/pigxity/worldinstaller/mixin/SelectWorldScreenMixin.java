@@ -2,11 +2,11 @@ package com.pigxity.worldinstaller.mixin;
 
 import com.pigxity.worldinstaller.WorldInstallerClient;
 import com.pigxity.worldinstaller.screen.InstallMapsScreen;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.screen.world.SelectWorldScreen;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.worldselection.SelectWorldScreen;
+import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -15,22 +15,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(SelectWorldScreen.class)
 public abstract class SelectWorldScreenMixin extends Screen {
 
-	private Screen parent;
-
-	protected SelectWorldScreenMixin(Text title) {
+	protected SelectWorldScreenMixin(Component title) {
 		super(title);
 	}
 
-	private ButtonWidget installMapButton;
-
 	@Inject(at = @At("RETURN"), method = "init")
 	private void worldinstaller$addInstallButton(CallbackInfo info) {
-		this.installMapButton = (ButtonWidget)this.addDrawableChild(ButtonWidget.builder(Text.literal("Install World"), (button) -> {
-			MinecraftClient.getInstance().setScreen(new InstallMapsScreen(
-					(SelectWorldScreen)(Screen)this,
+		this.addRenderableWidget(Button.builder(Component.literal("Install World"), button -> {
+			Minecraft.getInstance().setScreen(new InstallMapsScreen(
+					(SelectWorldScreen)(Object)this,
 					WorldInstallerClient.getConfig()
 			));
-		}).dimensions(
+		}).bounds(
 				7, 7, 100, 20
 		).build());
 	}

@@ -1,14 +1,16 @@
 package com.pigxity.worldinstaller.screen;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
-import net.minecraft.text.Text;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.ObjectSelectionList;
+import net.minecraft.client.input.MouseButtonEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.CommonColors;
 
 import java.io.File;
 
-public class FileList extends AlwaysSelectedEntryListWidget<FileList.Entry> {
-    public FileList(MinecraftClient client, int width, int height, int top, int itemHeight) {
+public final class FileList extends ObjectSelectionList<FileList.Entry> {
+    public FileList(Minecraft client, int width, int height, int top, int itemHeight) {
         super(client, width, height, top, itemHeight);
     }
 
@@ -22,7 +24,7 @@ public class FileList extends AlwaysSelectedEntryListWidget<FileList.Entry> {
         }
     }
 
-    public class Entry extends AlwaysSelectedEntryListWidget.Entry<Entry> {
+    public final class Entry extends ObjectSelectionList.Entry<Entry> {
         private final File file;
 
         public Entry(File file) {
@@ -30,23 +32,18 @@ public class FileList extends AlwaysSelectedEntryListWidget<FileList.Entry> {
         }
 
         @Override
-        public void render(DrawContext context, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float delta) {
-            context.drawTextWithShadow(client.textRenderer, file.getName(), x + 4, y + 5, 0xFFFFFF);
+        public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean hovered, float partialTick) {
+            graphics.text(minecraft.font, file.getName(), this.getContentX() + 2, this.getContentY() + 3, CommonColors.WHITE);
         }
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
-            if (button == 0) {
-                FileList.this.setSelected(this);
-                return true;
-            }
-
-            return false;
+        public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+            return event.button() == 0;
         }
 
         @Override
-        public Text getNarration() {
-            return Text.literal(file.getName());
+        public Component getNarration() {
+            return Component.literal(file.getName());
         }
 
         public File getFile() {
