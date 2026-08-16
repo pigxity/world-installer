@@ -1,5 +1,6 @@
 package com.pigxity.worldinstaller.mixin;
 
+import com.pigxity.worldinstaller.WorldInstallerClient;
 import com.pigxity.worldinstaller.screen.InstallMapsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -10,8 +11,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.io.IOException;
 
 @Mixin(SelectWorldScreen.class)
 public abstract class SelectWorldScreenMixin extends Screen {
@@ -27,12 +26,10 @@ public abstract class SelectWorldScreenMixin extends Screen {
 	@Inject(at = @At("RETURN"), method = "init")
 	private void worldinstaller$addInstallButton(CallbackInfo info) {
 		this.installMapButton = (ButtonWidget)this.addDrawableChild(ButtonWidget.builder(Text.literal("Install World"), (button) -> {
-			try {
-				MinecraftClient.getInstance().setScreen(new InstallMapsScreen((SelectWorldScreen)(Screen)this) {
-				});
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+			MinecraftClient.getInstance().setScreen(new InstallMapsScreen(
+					(SelectWorldScreen)(Screen)this,
+					WorldInstallerClient.getConfig()
+			));
 		}).dimensions(
 				7, 7, 100, 20
 		).build());

@@ -1,5 +1,6 @@
 package com.pigxity.worldinstaller.screen;
 
+import com.pigxity.worldinstaller.ModConfig;
 import com.pigxity.worldinstaller.WorldInstallerClient;
 import com.pigxity.worldinstaller.file.UnzipThread;
 import net.fabricmc.api.EnvType;
@@ -30,19 +31,19 @@ public class InstallMapsScreen extends Screen {
     private final Screen parent;
     private final MinecraftClient client;
     private final File savesDirectory;
-    private final File downloadsDirectory;
+    private final File installDirectory;
 
     private FileList fileList;
     private ButtonWidget continueButton;
     private CompletableFuture<List<File>> filesFuture;
 
-    public InstallMapsScreen(Screen parent) throws IOException {
+    public InstallMapsScreen(Screen parent, ModConfig config) {
         super(Text.literal("Select a zip file:"));
         this.parent = parent;
         this.client = MinecraftClient.getInstance();
 
         this.savesDirectory = new File(this.client.runDirectory.getPath() + File.separator + "saves");
-        this.downloadsDirectory = new File(System.getProperty("user.home") + File.separator + "Downloads");
+        this.installDirectory = config.resolveInstallDirectory();
     }
 
     private void errorScreen(String errorMessage) {
@@ -102,7 +103,7 @@ public class InstallMapsScreen extends Screen {
     @Override
     protected void init() {
         filesFuture = CompletableFuture.supplyAsync(()
-                -> getWorldFiles(downloadsDirectory));
+                -> getWorldFiles(installDirectory));
 
         fileList = createFileList();
         this.addDrawableChild(fileList);
@@ -125,7 +126,7 @@ public class InstallMapsScreen extends Screen {
             List<File> files = filesFuture.join();
 
             if (files.isEmpty()) {
-                errorScreen("Cannot find a valid zip file in " + downloadsDirectory.getAbsolutePath());
+                errorScreen("Cannot find a valid zip file in " + installDirectory.getAbsolutePath());
                 filesFuture = null;
                 return;
             }
