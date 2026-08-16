@@ -1,12 +1,30 @@
 package com.pigxity.worldinstaller.screen;
 
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.Component;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.Text;
 
-public class LoadingScreen extends CenteredMessageScreen {
+public class LoadingScreen extends Screen {
+
+    protected final Screen parent;
+    public MinecraftClient client;
 
     protected LoadingScreen(Screen parent) {
-        super(Component.literal("Installing world to saves directory..."), parent);
+        super(Text.literal("Installing world to saves directory..."));
+        this.parent = parent;
+        this.client = MinecraftClient.getInstance();
+    }
+
+    @Override
+    protected void init() {
+
+    }
+
+    @Override
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
+        context.drawCenteredTextWithShadow(this.textRenderer, this.title, this.width / 2, this.height / 2, 16777215);
     }
 
 }

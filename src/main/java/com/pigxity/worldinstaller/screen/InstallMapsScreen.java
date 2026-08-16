@@ -5,12 +5,12 @@ import com.pigxity.worldinstaller.WorldInstallerClient;
 import com.pigxity.worldinstaller.file.UnzipThread;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.network.chat.CommonComponents;
-import net.minecraft.network.chat.Component;
-import net.minecraft.util.CommonColors;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.screen.ScreenTexts;
+import net.minecraft.text.Text;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,28 +29,30 @@ public class InstallMapsScreen extends Screen {
     private static final int ELEMENT_PADDING = 20;
 
     private final Screen parent;
+    private final MinecraftClient client;
     private final File savesDirectory;
     private final File installDirectory;
 
     private FileList fileList;
-    private Button continueButton;
+    private ButtonWidget continueButton;
     private CompletableFuture<List<File>> filesFuture;
 
     public InstallMapsScreen(Screen parent, ModConfig config) {
-        super(Component.literal("Select a zip file:"));
+        super(Text.literal("Select a zip file:"));
         this.parent = parent;
+        this.client = MinecraftClient.getInstance();
 
-        this.savesDirectory = this.minecraft.getLevelSource().getBaseDir().toFile();
+        this.savesDirectory = new File(this.client.runDirectory.getPath() + File.separator + "saves");
         this.installDirectory = config.resolveInstallDirectory();
     }
 
     private void errorScreen(String errorMessage) {
         WorldInstallerClient.LOGGER.warn(errorMessage);
-        this.minecraft.setScreen(new ErrorScreen(errorMessage, this.parent));
+        this.client.setScreen(new ErrorScreen(errorMessage, this.parent));
     }
     private void errorScreen(Exception exception) {
         exception.printStackTrace();
-        this.minecraft.setScreen(new ErrorScreen(Arrays.toString(exception.getStackTrace()), this.parent));
+        this.client.setScreen(new ErrorScreen(Arrays.toString(exception.getStackTrace()), this.parent));
     }
 
     private int getListTop() {
@@ -62,7 +64,7 @@ public class InstallMapsScreen extends Screen {
 
     private FileList createFileList() {
         FileList list = new FileList(
-                minecraft,
+                client,
                 LIST_WIDTH,
                 LIST_HEIGHT,
                 getListTop(),
@@ -73,25 +75,25 @@ public class InstallMapsScreen extends Screen {
     }
 
     private void onConfirm() {
-        FileList.Entry selected = fileList.getSelected();
+        FileList.Entry selected = fileList.getSelectedOrNull();
         if (selected == null) {
             return;
         }
         File selectedFile = selected.getFile();
 
-        this.minecraft.setScreen(new LoadingScreen(this.parent));
+        this.client.setScreen(new LoadingScreen(this.parent));
 
         try {
             // nested world directory, extract directly into saves
             if (fileNotInRootDir(selectedFile, "level.dat")) {
-                new UnzipThread(selectedFile.getPath(), savesDirectory, this.minecraft).start();
+                new UnzipThread(selectedFile.getPath(), savesDirectory, this.client).start();
             } else {
                 // top-level level.dat
                 File dir = new File(savesDirectory, selectedFile.getName().replaceFirst("[.][^.]+$", ""));
                 if (!dir.isDirectory() && !dir.mkdirs()) {
                     throw new IOException("Failed to create directory " + dir);
                 }
-                new UnzipThread(selectedFile.getPath(), dir, this.minecraft).start();
+                new UnzipThread(selectedFile.getPath(), dir, this.client).start();
             }
         } catch (Exception e) {
             errorScreen(e);
@@ -104,16 +106,16 @@ public class InstallMapsScreen extends Screen {
                 -> getWorldFiles(installDirectory));
 
         fileList = createFileList();
-        this.addRenderableWidget(fileList);
+        this.addDrawableChild(fileList);
 
         final int buttonY = getListBottom() + ELEMENT_PADDING;
 
-        continueButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_CONTINUE, button -> onConfirm())
-                .bounds(this.width / 2 - 105, buttonY, 100, 20).build());
+        continueButton = this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CONTINUE, (b) -> onConfirm())
+                .dimensions(this.width / 2 - 105, buttonY, 100, 20).build());
         continueButton.active = false;
 
-        this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, button -> this.minecraft.setScreen(this.parent))
-                .bounds(this.width / 2 + 5, buttonY, 100, 20).build());
+        this.addDrawableChild(ButtonWidget.builder(ScreenTexts.CANCEL, (b) -> this.client.setScreen(this.parent))
+                .dimensions(this.width / 2 + 5, buttonY, 100, 20).build());
     }
 
     @Override
@@ -141,14 +143,14 @@ public class InstallMapsScreen extends Screen {
     }
 
     @Override
-    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
-        graphics.centeredText(
-                this.font,
+    public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        super.render(context, mouseX, mouseY, delta);
+        context.drawCenteredTextWithShadow(
+                this.textRenderer,
                 this.title,
                 this.width / 2,
-                getListTop() - ELEMENT_PADDING - this.font.lineHeight,
-                CommonColors.WHITE
+                getListTop() - ELEMENT_PADDING - this.textRenderer.fontHeight,
+                16777215
         );
     }
 

@@ -3,14 +3,14 @@ package com.pigxity.worldinstaller.mixin;
 import com.pigxity.worldinstaller.WorldInstallerClient;
 import com.pigxity.worldinstaller.file.FileUtils;
 import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.toasts.SystemToast;
-import net.minecraft.client.gui.layouts.LinearLayout;
-import net.minecraft.client.gui.screens.worldselection.EditWorldScreen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.world.level.storage.LevelResource;
-import net.minecraft.world.level.storage.LevelStorageSource;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.world.EditWorldScreen;
+import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.text.Text;
+import net.minecraft.util.WorldSavePath;
+import net.minecraft.world.level.storage.LevelStorage;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -27,31 +27,31 @@ import java.util.concurrent.CompletionException;
 public abstract class EditWorldScreenMixin {
     @Shadow
     @Final
-    private LinearLayout layout;
+    private DirectionalLayoutWidget layout;
 
     @Inject(
             method = "<init>",
             at = @At(
                     value = "FIELD",
-                    target = "Lnet/minecraft/client/gui/screens/worldselection/EditWorldScreen;BACKUP_BUTTON:Lnet/minecraft/network/chat/Component;",
+                    target = "Lnet/minecraft/client/gui/screen/world/EditWorldScreen;BACKUP_TEXT:Lnet/minecraft/text/Text;",
                     shift = At.Shift.BEFORE
             )
     )
     private void worldinstaller$addExportButton(
-            Minecraft client,
-            LevelStorageSource.LevelStorageAccess storageSession,
+            MinecraftClient client,
+            LevelStorage.Session storageSession,
             String worldName,
             BooleanConsumer callback,
             CallbackInfo info
     ) {
-        this.layout.addChild(Button.builder(Component.literal("Export World"), button -> {
+        this.layout.add(ButtonWidget.builder(Text.literal("Export World"), button -> {
             button.active = false;
 
-            Path worldDirectory = storageSession.getLevelPath(LevelResource.ROOT);
+            Path worldDirectory = storageSession.getDirectory(WorldSavePath.ROOT);
             Path zipFile = WorldInstallerClient.getConfig()
                     .resolveExportDirectory()
                     .toPath()
-                    .resolve(storageSession.getLevelId() + ".zip");
+                    .resolve(storageSession.getDirectoryName() + ".zip");
 
             CompletableFuture.runAsync(() -> {
                 try {
@@ -79,12 +79,12 @@ public abstract class EditWorldScreenMixin {
         }).width(200).build());
     }
 
-    private static void showToast(Minecraft client, String title, String description) {
-        client.getToastManager().addToast(SystemToast.multiline(
+    private static void showToast(MinecraftClient client, String title, String description) {
+        client.getToastManager().add(SystemToast.create(
                 client,
-                SystemToast.SystemToastId.WORLD_BACKUP,
-                Component.literal(title),
-                Component.literal(description)
+                SystemToast.Type.WORLD_BACKUP,
+                Text.literal(title),
+                Text.literal(description)
         ));
     }
 }
