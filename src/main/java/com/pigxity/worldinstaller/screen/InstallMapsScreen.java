@@ -1,7 +1,7 @@
-package com.piggygaming.ezmapdl.screen;
+package com.pigxity.worldinstaller.screen;
 
-import com.piggygaming.ezmapdl.EasyMapDownload;
-import com.piggygaming.ezmapdl.file.UnzipThread;
+import com.pigxity.worldinstaller.WorldInstallerClient;
+import com.pigxity.worldinstaller.file.UnzipThread;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.client.MinecraftClient;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.piggygaming.ezmapdl.file.FileUtils.*;
+import static com.pigxity.worldinstaller.file.FileUtils.*;
 
 @Environment(EnvType.CLIENT)
 public class InstallMapsScreen extends Screen {
@@ -46,7 +46,7 @@ public class InstallMapsScreen extends Screen {
     }
 
     private void errorScreen(String errorMessage) {
-        EasyMapDownload.LOGGER.warn(errorMessage);
+        WorldInstallerClient.LOGGER.warn(errorMessage);
         this.client.setScreen(new ErrorScreen(errorMessage, this.parent));
     }
     private void errorScreen(Exception exception) {

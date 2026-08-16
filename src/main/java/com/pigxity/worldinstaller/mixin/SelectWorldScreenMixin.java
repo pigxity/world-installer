@@ -1,6 +1,6 @@
-package com.piggygaming.ezmapdl.mixin;
+package com.pigxity.worldinstaller.mixin;
 
-import com.piggygaming.ezmapdl.screen.InstallMapsScreen;
+import com.pigxity.worldinstaller.screen.InstallMapsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
@@ -25,7 +25,7 @@ public abstract class SelectWorldScreenMixin extends Screen {
 	private ButtonWidget installMapButton;
 
 	@Inject(at = @At("RETURN"), method = "init")
-	private void addCustomButton(CallbackInfo info) {
+	private void worldinstaller$addInstallButton(CallbackInfo info) {
 		this.installMapButton = (ButtonWidget)this.addDrawableChild(ButtonWidget.builder(Text.literal("Install World"), (button) -> {
 			try {
 				MinecraftClient.getInstance().setScreen(new InstallMapsScreen((SelectWorldScreen)(Screen)this) {

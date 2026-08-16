@@ -1,4 +1,4 @@
-package com.piggygaming.ezmapdl.screen;
+package com.pigxity.worldinstaller.screen;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;

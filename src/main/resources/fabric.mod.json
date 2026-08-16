@@ -1,29 +1,26 @@
 {
 	"schemaVersion": 1,
-	"id": "ezmapdl",
+	"id": "worldinstaller",
 	"version": "${version}",
-	"name": "World Download Button",
+	"name": "World Install Button",
 	"description": "Adds a button to the select world screen to instantly install minecraft worlds",
 	"authors": [
 		"pigxity"
 	],
 	"contact": {
 		"homepage": "https://modrinth.com/mod/easymapdownload",
-		"sources": "https://github.com/Piggy-Gaming/EasyMapDownload"
+		"sources": "https://github.com/pigxity/EasyMapDownload"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/ezmapdl/icon.png",
+	"icon": "assets/worldinstaller/icon.png",
 	"environment": "client",
 	"entrypoints": {
-		"main": [
-			"com.piggygaming.ezmapdl.EasyMapDownload"
-		],
 		"client": [
-			"com.piggygaming.ezmapdl.EasyMapDownloadClient"
+          "com.pigxity.worldinstaller.WorldInstallerClient"
 		]
 	},
 	"mixins": [
-		"ezmapdl.mixins.json"
+      "worldinstaller.mixins.json"
 	],
 	"depends": {
 		"fabricloader": ">=0.15.21",

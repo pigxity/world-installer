@@ -1,4 +1,4 @@
-package com.piggygaming.ezmapdl.file;
+package com.pigxity.worldinstaller.file;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -6,7 +6,7 @@ import net.minecraft.client.gui.screen.world.SelectWorldScreen;
 
 import java.io.File;
 
-import static com.piggygaming.ezmapdl.file.FileUtils.unzipFile;
+import static com.pigxity.worldinstaller.file.FileUtils.unzipFile;
 
 public class UnzipThread extends Thread {
     private final String fileZip;

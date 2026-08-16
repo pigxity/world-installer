@@ -1,4 +1,4 @@
-package com.piggygaming.ezmapdl.file;
+package com.pigxity.worldinstaller.file;
 
 import org.jetbrains.annotations.NotNull;
 
