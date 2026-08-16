@@ -92,7 +92,7 @@ modrinth {
     projectId = project.modrinth_id
 
     versionNumber = project.version
-    versionName = "World Download Button ${project.version}"
+    versionName = "World Install Button ${project.version}"
     versionType = "release"
 
     uploadFile = remapJar
