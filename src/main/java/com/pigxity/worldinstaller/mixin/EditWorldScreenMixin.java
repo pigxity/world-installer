@@ -7,6 +7,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.world.EditWorldScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.DirectionalLayoutWidget;
+import net.minecraft.client.toast.SystemToast;
 import net.minecraft.text.Text;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.world.level.storage.LevelStorage;
@@ -18,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.file.Path;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -53,16 +55,36 @@ public abstract class EditWorldScreenMixin {
 
             CompletableFuture.runAsync(() -> {
                 try {
-                    FileUtils.zipDirectory(worldDirectory, zipFile);
+                    FileUtils.zipDirectory(worldDirectory, zipFile, Set.of("session.lock")); //skip session.lock
                 } catch (java.io.IOException exception) {
                     throw new CompletionException(exception);
                 }
             }).whenComplete((unused, exception) -> {
                 if (exception != null) {
                     WorldInstallerClient.LOGGER.error("Failed to export world", exception);
+
+                    client.execute(() -> {
+                        showToast(client, "ERROR", "Failed to export world: " + exception.toString());
+                        button.active = true;
+                    });
+
+                    return;
                 }
-                client.execute(() -> button.active = true);
+
+                client.execute(() -> {
+                    showToast(client, "World exported", "Exported world to " + zipFile.toAbsolutePath());
+                    callback.accept(false); //close screen
+                });
             });
         }).width(200).build());
+    }
+
+    private static void showToast(MinecraftClient client, String title, String description) {
+        client.getToastManager().add(SystemToast.create(
+                client,
+                SystemToast.Type.WORLD_BACKUP,
+                Text.literal(title),
+                Text.literal(description)
+        ));
     }
 }

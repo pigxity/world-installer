@@ -8,11 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -43,7 +39,7 @@ public final class FileUtils {
         return destFile;
     }
 
-    public static void zipDirectory(Path sourceDirectory, Path zipFile) throws IOException {
+    public static void zipDirectory(Path sourceDirectory, Path zipFile, Set<String> ignoredFiles) throws IOException {
         Files.createDirectories(zipFile.getParent());
 
         try (ZipOutputStream output = new ZipOutputStream(Files.newOutputStream(zipFile)); Stream<Path> paths = Files.walk(sourceDirectory)) {
@@ -52,6 +48,10 @@ public final class FileUtils {
                 Path path = iterator.next();
                 Path relativePath = sourceDirectory.relativize(path);
                 if (relativePath.toString().isEmpty()) {
+                    continue;
+                }
+
+                if (ignoredFiles.contains(path.getFileName().toString())) {
                     continue;
                 }
 
